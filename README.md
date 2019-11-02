@@ -11,9 +11,9 @@ activemq {
 
    com.jaas.auth.JaasLoginModule required
        debug=false
-	   user="root"
-	   password=""
-	   url="jdbc:mysql://localhost/ptstakip?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC"
+	   dbUser="root"
+	   dbPassword=""
+	   dataSourceUrl="jdbc:mysql://localhost/ptstakip?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC"
 	   driver="com.mysql.cj.jdbc.Driver"
 	   tableName="artemis_credential"
 	   usernameFieldName="username"
