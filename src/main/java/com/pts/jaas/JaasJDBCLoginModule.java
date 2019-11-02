@@ -198,9 +198,9 @@ public class JaasJDBCLoginModule implements LoginModule {
      */
     private Connection getConnection() throws LoginException {
 
-        String dBUser = (String) options.get("user");
-        String dBPassword = (String) options.get("password");
-        String dBUrl = (String) options.get("url");
+        String dBUser = (String) options.get("dbUser");
+        String dBPassword = (String) options.get("dbPassword");
+        String dBUrl = (String) options.get("dataSourceUrl");
         String dBDriver = (String) options.get("driver");
 
         Connection con = null;
