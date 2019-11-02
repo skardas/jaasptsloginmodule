@@ -9,7 +9,7 @@ Then update login.config file in the etc of artemis as follows (with correct db 
 ~~~xml
 activemq {
 
-   com.jaas.auth.JaasLoginModule required
+   com.pts.jaas.JaasJDBCLoginModule required
        debug=false
 	   dbUser="root"
 	   dbPassword=""
