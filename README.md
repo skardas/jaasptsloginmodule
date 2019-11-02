@@ -1,4 +1,4 @@
-# jaas4apachemq
+# jdbcloginmodule
 
 first run: mvn clean package -DskipTest
 
