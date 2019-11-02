@@ -2,29 +2,32 @@
 
 first run: mvn clean package -DskipTest
 
-then put mysql connector jar and original-jaas-auth-1.0-SNAPSHOT.jar into lib folder or ApacheMQ.
+then put mysql connector jar and original-jaas-auth-1.0-SNAPSHOT.jar into lib folder or Artemis instance.
 
 Create a mysql db with apachemq and devices table with clientID, username and password
-Then update apachemq config as follows (with correct db creadentials):
+Then update login.config file in the etc of artemis as follows (with correct db creadentials and table field):
 ~~~xml
-<broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.data}">
-.
-.
-.
-<plugins>
-		<bean id="authPlugin" class="com.pts.jaas.auth.JaasAuthPlugin" xmlns="http://www.springframework.org/schema/beans">
-		<property name="url">
-		<value>jdbc:mysql://localhost:3306/apachemq?useSSL=false&amp;serverTimezone=UTC&amp;useLegacyDatetimeCode=false&amp;</value>
-		</property>
-		<property name="username">
-		<value>root</value>
-		</property>
-		<property name="password">
-		<value></value>
-		</property>
-		</bean>
-</plugins>
-</code>
+activemq {
+
+   com.jaas.auth.JaasLoginModule required
+       debug=false
+	   user="root"
+	   password=""
+	   url="jdbc:mysql://localhost/ptstakip?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC"
+	   driver="com.mysql.cj.jdbc.Driver"
+	   tableName="artemis_credential"
+	   usernameFieldName="username"
+	   passwordFieldName="password"
+	   roleFieldName="role"
+	   reload=true;
+	   
+	org.apache.activemq.artemis.spi.core.security.jaas.PropertiesLoginModule sufficient
+       debug=false
+       reload=true
+       org.apache.activemq.jaas.properties.user="artemis-users.properties"
+       org.apache.activemq.jaas.properties.role="artemis-roles.properties";
+
+};
 ~~~
 
 
