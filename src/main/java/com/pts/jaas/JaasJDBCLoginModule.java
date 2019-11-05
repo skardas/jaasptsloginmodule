@@ -157,8 +157,8 @@ public class JaasJDBCLoginModule implements LoginModule {
         try {
             con = getConnection();
             stmt = con.prepareStatement(sql);
-            stmt.setString(1, username.toLowerCase(Locale.ENGLISH));
-            stmt.setString(2, new String(password).toLowerCase(Locale.ENGLISH));
+            stmt.setString(1, username);
+            stmt.setString(2, new String(password));
 
             rs = stmt.executeQuery();
             if (rs.next()) { //User exist with the given user name and password.
