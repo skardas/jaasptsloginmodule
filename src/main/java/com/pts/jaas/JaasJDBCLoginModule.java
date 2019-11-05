@@ -81,7 +81,6 @@ public class JaasJDBCLoginModule implements LoginModule {
             if (isValidUser()) { //validate user.
                 loginSucceeded = true;
                 principals.add(new UserPrincipal(username));
-                principals.add(new RolePrincipal("sensor"));
             }
             else
                 loginSucceeded = false;
