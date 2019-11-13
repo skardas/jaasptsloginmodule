@@ -9,16 +9,9 @@ Then update login.config file in the etc of artemis as follows (with correct db 
 ~~~xml
 activemq {
 
-   com.pts.jaas.JaasJDBCLoginModule required
-       debug=false
-	   dbUser="root"
-	   dbPassword=""
-	   dataSourceUrl="jdbc:mysql://localhost/ptstakip?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC"
-	   driver="com.mysql.cj.jdbc.Driver"
-	   tableName="artemis_credential"
-	   usernameFieldName="username"
-	   passwordFieldName="password"
-	   roleFieldName="role"
+   com.pts.jaas.JaasPTSLoginModule required
+ 	   authURL="http://localhost:8080/api/account"
+ 	   debug=true
 	   reload=true;
 	   
 	org.apache.activemq.artemis.spi.core.security.jaas.PropertiesLoginModule sufficient

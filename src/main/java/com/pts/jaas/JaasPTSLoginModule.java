@@ -1,19 +1,26 @@
 package com.pts.jaas;
 
+import com.sun.net.httpserver.Authenticator;
 import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;
 import org.apache.activemq.artemis.spi.core.security.jaas.UserPrincipal;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.security.auth.Subject;
 import javax.security.auth.callback.*;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.security.Principal;
-import java.sql.*;
+ import java.security.Principal;
+import java.util.Base64;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -21,9 +28,9 @@ import java.util.Set;
 /**
  * @author skardas
  */
-public class JaasJDBCLoginModule implements LoginModule {
+public class JaasPTSLoginModule implements LoginModule {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JaasJDBCLoginModule.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JaasPTSLoginModule.class);
     // initial state
     private Subject subject;
     private CallbackHandler callbackHandler;
@@ -37,12 +44,13 @@ public class JaasJDBCLoginModule implements LoginModule {
     private boolean commitSucceeded = false;
 
     //user credentials
+    private String url;
     private String username = null;
     private char[] password = null;
 
     //user principle
     private final Set<Principal> principals = new HashSet<>();
-
+    WebTarget client;
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler,
                            Map<String, ?> sharedState, Map<String, ?> options) {
@@ -50,6 +58,8 @@ public class JaasJDBCLoginModule implements LoginModule {
         this.callbackHandler = callbackHandler;
         this.options = options;
         debug = "true".equalsIgnoreCase((String) options.get("debug"));
+        this.url = (String) options.get("authURL");
+        this.client = ClientBuilder.newClient().target(url);
     }
 
     @Override
@@ -73,7 +83,7 @@ public class JaasJDBCLoginModule implements LoginModule {
                 LOGGER.debug("Password : " + password);
             }
 
-            if (username == null || password == null) {
+            if (username == null) {
                 LOGGER.error("Callback handler does not return login data properly");
                 throw new LoginException("Callback handler does not return login data properly");
             }
@@ -81,6 +91,8 @@ public class JaasJDBCLoginModule implements LoginModule {
             if (isValidUser()) { //validate user.
                 loginSucceeded = true;
                 principals.add(new UserPrincipal(username));
+                principals.add(new RolePrincipal("Sensor"));
+
             }
             else
                 loginSucceeded = false;
@@ -142,78 +154,22 @@ public class JaasJDBCLoginModule implements LoginModule {
     }
 
     private boolean isValidUser() throws LoginException {
-
-        String tableName = (String) options.get("tableName");
-        String usernameFieldName = (String) options.get("usernameFieldName");
-        String passwordFieldName = (String) options.get("passwordFieldName");
-        String roleFieldName = (String) options.get("roleFieldName");
-
-        String sql = String.format("select * from %s where %s=? and %s=?",tableName, usernameFieldName, passwordFieldName);
-        Connection con = null;
-        ResultSet rs = null;
-        PreparedStatement stmt = null;
-        boolean isSuccess = false;
-
-        try {
-            con = getConnection();
-            stmt = con.prepareStatement(sql);
-            stmt.setString(1, username);
-            stmt.setString(2, new String(password));
-
-            rs = stmt.executeQuery();
-            if (rs.next()) { //User exist with the given user name and password.
-                principals.add(new RolePrincipal(rs.getString(roleFieldName)));
-                isSuccess = true;
-            }
-        } catch (Exception e) {
-            LOGGER.error("Error when loading user from the database " + e);
-            e.printStackTrace();
-        } finally {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                LOGGER.error("Error when closing result set." + e);
-            }
-            try {
-                stmt.close();
-            } catch (SQLException e) {
-                LOGGER.error("Error when closing statement." + e);
-            }
-            try {
-                con.close();
-            } catch (SQLException e) {
-                LOGGER.error("Error when closing connection." + e);
-            }
+       if(password == null)
+        {
+            client.register(OAuth2ClientSupport.feature(username));
         }
-        return isSuccess;
+        else
+        {
+            client.register(HttpAuthenticationFeature.basic(username, new String(password)));
+        }
+        Response response = client
+                .request(MediaType.APPLICATION_JSON)
+                .get();
+
+
+        return response.getStatus() == 200;
     }
 
-
-    /**
-     * Returns JDBC connection
-     *
-     * @return
-     * @throws LoginException
-     */
-    private Connection getConnection() throws LoginException {
-
-        String dBUser = (String) options.get("dbUser");
-        String dBPassword = (String) options.get("dbPassword");
-        String dBUrl = (String) options.get("dataSourceUrl");
-        String dBDriver = (String) options.get("driver");
-
-        Connection con = null;
-        try {
-            //loading driver
-            Class.forName(dBDriver);
-            con = DriverManager.getConnection(dBUrl, dBUser, dBPassword);
-        } catch (Exception e) {
-            LOGGER.error("Error when creating database connection" + e);
-            e.printStackTrace();
-        } finally {
-        }
-        return con;
-    }
 
 
 }
