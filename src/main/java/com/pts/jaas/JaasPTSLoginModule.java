@@ -82,10 +82,8 @@ public class JaasPTSLoginModule implements LoginModule {
             }
             else
                 loginSucceeded = false;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (UnsupportedCallbackException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            LOGGER.debug("LoginModule",e.getCause());
         }
         return loginSucceeded;
     }
@@ -141,7 +139,6 @@ public class JaasPTSLoginModule implements LoginModule {
             client.register(HttpAuthenticationFeature.basic(username, new String(password)));
         }
 
-
         Response response = client
                 .request(MediaType.APPLICATION_JSON)
                 .get();
@@ -150,6 +147,7 @@ public class JaasPTSLoginModule implements LoginModule {
         for(String  next: response.readEntity(UserDTO.class).getAuthorities())
         {
             principals.add(new RolePrincipal(next));
+            LOGGER.debug("LoginModule:  next Role : ", next);
         }
         return true;
     }

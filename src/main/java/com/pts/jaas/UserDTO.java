@@ -1,5 +1,7 @@
 package com.pts.jaas;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.Instant;
 import java.util.Set;
 
@@ -18,10 +20,11 @@ public class UserDTO {
     private String langKey;
     private String createdBy;
 
+    @JsonIgnore
     private Instant createdDate;
 
     private String lastModifiedBy;
-
+    @JsonIgnore
     private Instant lastModifiedDate;
 
     private Set<String> authorities;
