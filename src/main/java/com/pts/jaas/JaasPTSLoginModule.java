@@ -1,18 +1,16 @@
 package com.pts.jaas;
+import com.google.gson.Gson;
+import okhttp3.*;
 import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;
 import org.apache.activemq.artemis.spi.core.security.jaas.UserPrincipal;
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.*;
+import javax.security.auth.callback.Callback;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+
 import java.io.IOException;
 import java.security.Principal;
 import java.util.HashSet;
@@ -41,8 +39,7 @@ public class JaasPTSLoginModule implements LoginModule {
     private char[] password = null;
     //user principle
     private final Set<Principal> principals = new HashSet<>();
-    WebTarget client;
-    @Override
+     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler,
                            Map<String, ?> sharedState, Map<String, ?> options) {
         this.subject = subject;
@@ -50,8 +47,7 @@ public class JaasPTSLoginModule implements LoginModule {
         this.options = options;
         debug = "true".equalsIgnoreCase((String) options.get("debug"));
         this.url = (String) options.get("authURL");
-        this.client = ClientBuilder.newClient().target(url);
-    }
+     }
 
     @Override
     public boolean login() throws LoginException {
@@ -129,26 +125,71 @@ public class JaasPTSLoginModule implements LoginModule {
         loginSucceeded = false;
         return true;
     }
-    private boolean isValidUser() throws LoginException {
-       if(password == null)
+    private boolean isValidUser() throws Exception {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(
+                        new DefaultContentTypeInterceptor("application/json"))
+                .build();
+
+
+        Request request;
+       if(password != null)
         {
-            client.register(OAuth2ClientSupport.feature(username));
+            request = new Request.Builder()
+                    .url(this.url).addHeader("Authorization", Credentials.basic(username, new String(password)))
+                    .build();
         }
         else
         {
-            client.register(HttpAuthenticationFeature.basic(username, new String(password)));
+            request = new Request.Builder()
+                    .url(this.url)
+                    .addHeader("Authorization", "Bearer " + username)
+                    .addHeader("cache-control", "no-cache")
+                    .build();
+
+            System.out.println("LoginModule: "+username + " : " + new String(password));
         }
 
-        Response response = client
-                .request(MediaType.APPLICATION_JSON)
-                .get();
-        if(response.getStatus() != 200) return false;
-
-        for(String  next: response.readEntity(UserDTO.class).getAuthorities())
+        try
         {
-            principals.add(new RolePrincipal(next));
-            LOGGER.debug("LoginModule:  next Role : ", next);
+
+            Call call = client.newCall(request);
+            Response response = call.execute();
+            UserDTO userDTO =  new Gson().fromJson(response.body().string(),UserDTO.class);
+            for(String  next: userDTO.getAuthorities())
+            {
+                principals.add(new RolePrincipal(next));
+                LOGGER.debug("LoginModule:  next Role : ", next);
+                System.out.println("LoginModule:  next Role : "+ next);
+            }
+            response.close();
+
+        }catch (Exception e)
+        {
+            LOGGER.debug("LoginModule ", e.getCause());
+            e.printStackTrace();
+            return false;
         }
         return true;
+    }
+    static class DefaultContentTypeInterceptor implements Interceptor {
+
+         String contentType;
+
+        public DefaultContentTypeInterceptor(String contentType) {
+            this.contentType = contentType;
+        }
+
+        public Response intercept(Interceptor.Chain chain)
+                throws IOException {
+
+            Request originalRequest = chain.request();
+            Request requestWithUserAgent = originalRequest
+                    .newBuilder()
+                    .header("Content-Type", contentType)
+                    .build();
+
+            return chain.proceed(requestWithUserAgent);
+        }
     }
 }
