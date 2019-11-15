@@ -79,7 +79,8 @@ public class JaasPTSLoginModule implements LoginModule {
             else
                 loginSucceeded = false;
         } catch (Exception e) {
-            LOGGER.debug("LoginModule",e.getCause());
+            LOGGER.error("LoginModule",e.getCause());
+            loginSucceeded = false;
         }
         return loginSucceeded;
     }
@@ -131,8 +132,7 @@ public class JaasPTSLoginModule implements LoginModule {
                         new DefaultContentTypeInterceptor("application/json"))
                 .build();
 
-
-        Request request;
+       Request request;
        if(password != null)
         {
             request = new Request.Builder()
@@ -146,34 +146,18 @@ public class JaasPTSLoginModule implements LoginModule {
                     .addHeader("Authorization", "Bearer " + username)
                     .addHeader("cache-control", "no-cache")
                     .build();
-
-            System.out.println("LoginModule: "+username + " : " + new String(password));
         }
-
-        try
+        Response response = client.newCall(request).execute();
+        String buffer = response.body().string();
+        UserDTO userDTO =  new Gson().fromJson(buffer,UserDTO.class);
+        for(String  next: userDTO.getAuthorities())
         {
-
-            Call call = client.newCall(request);
-            Response response = call.execute();
-            UserDTO userDTO =  new Gson().fromJson(response.body().string(),UserDTO.class);
-            for(String  next: userDTO.getAuthorities())
-            {
-                principals.add(new RolePrincipal(next));
-                LOGGER.debug("LoginModule:  next Role : ", next);
-                System.out.println("LoginModule:  next Role : "+ next);
-            }
-            response.close();
-
-        }catch (Exception e)
-        {
-            LOGGER.debug("LoginModule ", e.getCause());
-            e.printStackTrace();
-            return false;
+            principals.add(new RolePrincipal(next));
         }
+        response.close();
         return true;
     }
     static class DefaultContentTypeInterceptor implements Interceptor {
-
          String contentType;
 
         public DefaultContentTypeInterceptor(String contentType) {
