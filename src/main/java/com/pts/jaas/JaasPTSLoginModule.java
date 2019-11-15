@@ -3,8 +3,6 @@ import com.google.gson.Gson;
 import okhttp3.*;
 import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;
 import org.apache.activemq.artemis.spi.core.security.jaas.UserPrincipal;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.*;
 import javax.security.auth.callback.Callback;
@@ -22,14 +20,10 @@ import java.util.Set;
  */
 public class JaasPTSLoginModule implements LoginModule {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JaasPTSLoginModule.class);
     // initial state
     private Subject subject;
     private CallbackHandler callbackHandler;
-    private Map options;
 
-    // configurable option
-    private boolean debug = false;
     // the authentication status
     private boolean loginSucceeded = false;
     private boolean commitSucceeded = false;
@@ -44,8 +38,6 @@ public class JaasPTSLoginModule implements LoginModule {
                            Map<String, ?> sharedState, Map<String, ?> options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
-        this.options = options;
-        debug = "true".equalsIgnoreCase((String) options.get("debug"));
         this.url = (String) options.get("authURL");
      }
 
@@ -63,12 +55,7 @@ public class JaasPTSLoginModule implements LoginModule {
             callbackHandler.handle(callbacks);
             username = ((NameCallback) callbacks[0]).getName();
             password = ((PasswordCallback) callbacks[1]).getPassword();
-            if (debug) {
-                LOGGER.debug("Username :" + username);
-                LOGGER.debug("Password :" + password);
-            }
             if (username == null) {
-                LOGGER.error("Callback handler does not return login data properly");
                 throw new LoginException("Callback handler does not return login data properly");
             }
             if (isValidUser()) { //validate user.
@@ -79,7 +66,6 @@ public class JaasPTSLoginModule implements LoginModule {
             else
                 loginSucceeded = false;
         } catch (Exception e) {
-            LOGGER.error("LoginModule",e.getCause());
             loginSucceeded = false;
         }
         return loginSucceeded;
@@ -88,15 +74,11 @@ public class JaasPTSLoginModule implements LoginModule {
     public boolean commit() throws LoginException {
         if (loginSucceeded) {
             subject.getPrincipals().addAll(principals);
-            LOGGER.debug("Commit::LoginSucceeded");
         }
         else
         {
             clearAll();
             return false;
-        }
-        if (debug) {
-            LOGGER.debug("commit: " + loginSucceeded);
         }
         return (commitSucceeded = true);
     }
@@ -105,9 +87,6 @@ public class JaasPTSLoginModule implements LoginModule {
     }
     @Override
     public boolean abort() throws LoginException {
-        if (debug) {
-            LOGGER.debug("abort");
-        }
         if(!loginSucceeded)
             return false;
         if (commitSucceeded){
@@ -118,9 +97,6 @@ public class JaasPTSLoginModule implements LoginModule {
     @Override
     public boolean logout() throws LoginException {
         subject.getPrincipals().removeAll(principals);
-        if (debug) {
-            LOGGER.debug("logout");
-        }
         clearAll();
         commitSucceeded = false;
         loginSucceeded = false;

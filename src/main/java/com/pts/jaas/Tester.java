@@ -2,7 +2,6 @@ package com.pts.jaas;
 
 import com.google.gson.Gson;
 import okhttp3.*;
-import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;
 
 import java.io.IOException;
 
