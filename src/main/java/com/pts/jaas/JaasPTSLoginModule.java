@@ -109,7 +109,7 @@ public class JaasPTSLoginModule implements LoginModule {
                 .build();
 
        Request request;
-       if(password != null)
+       if(password != null && password.length > 1)
         {
             request = new Request.Builder()
                     .url(this.url).addHeader("Authorization", Credentials.basic(username, new String(password)))
