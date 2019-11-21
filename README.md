@@ -1,8 +1,8 @@
-# jdbcloginmodule
+# jaasptsloginmodule
 
 first run: mvn clean package -DskipTest
 
-then put mysql connector jar and original-jaas-auth-1.0-SNAPSHOT.jar into lib folder or Artemis instance.
+then put  original-jaas-auth-1.0-SNAPSHOT.jar into lib folder or Artemis instance.
 
 Create a mysql db with apachemq and devices table with clientID, username and password
 Then update login.config file in the etc of artemis as follows (with correct db creadentials and table field):
