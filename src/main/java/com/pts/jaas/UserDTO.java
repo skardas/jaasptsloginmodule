@@ -8,7 +8,6 @@ import java.util.Set;
  */
 public class UserDTO {
 
-    private String id;
 
     private String login;
 
@@ -31,15 +30,6 @@ public class UserDTO {
 
     public UserDTO() {
         // Empty constructor needed for Jackson.
-    }
-
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getLogin() {
