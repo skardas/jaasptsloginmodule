@@ -8,20 +8,30 @@ import java.util.Set;
  */
 public class UserDTO {
 
-    private Long id;
+    private String id;
+
     private String login;
+
+
     private String firstName;
+
+
     private String lastName;
+
+
     private String email;
+
     private String imageUrl;
     private boolean activated = false;
     private String langKey;
+
     private String createdBy;
 
-    private transient Instant createdDate;
+    private Instant createdDate;
 
     private String lastModifiedBy;
-    private transient Instant lastModifiedDate;
+
+    private Instant lastModifiedDate;
 
     private Set<String> authorities;
 
@@ -29,11 +39,12 @@ public class UserDTO {
         // Empty constructor needed for Jackson.
     }
 
-    public Long getId() {
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
