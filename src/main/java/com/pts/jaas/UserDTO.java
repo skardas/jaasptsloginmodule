@@ -27,12 +27,6 @@ public class UserDTO {
 
     private String createdBy;
 
-    private Instant createdDate;
-
-    private String lastModifiedBy;
-
-    private Instant lastModifiedDate;
-
     private Set<String> authorities;
 
     public UserDTO() {
@@ -112,29 +106,6 @@ public class UserDTO {
         this.createdBy = createdBy;
     }
 
-    public Instant getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(Instant createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public String getLastModifiedBy() {
-        return lastModifiedBy;
-    }
-
-    public void setLastModifiedBy(String lastModifiedBy) {
-        this.lastModifiedBy = lastModifiedBy;
-    }
-
-    public Instant getLastModifiedDate() {
-        return lastModifiedDate;
-    }
-
-    public void setLastModifiedDate(Instant lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
-    }
 
     public Set<String> getAuthorities() {
         return authorities;
@@ -155,9 +126,6 @@ public class UserDTO {
                 ", activated=" + activated +
                 ", langKey='" + langKey + '\'' +
                 ", createdBy=" + createdBy +
-                ", createdDate=" + createdDate +
-                ", lastModifiedBy='" + lastModifiedBy + '\'' +
-                ", lastModifiedDate=" + lastModifiedDate +
                 ", authorities=" + authorities +
                 "}";
     }
